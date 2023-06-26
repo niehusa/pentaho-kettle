@@ -1432,4 +1432,8 @@ public class RestDialog extends BaseStepDialog implements StepDialogInterface {
     wlMethodField.setEnabled( wMethodInField.getSelection() );
     wMethodField.setEnabled( wMethodInField.getSelection() );
   }
+
+  public CTabFolder getCTabFolder() {
+    return wTabFolder;
+  }
 }
