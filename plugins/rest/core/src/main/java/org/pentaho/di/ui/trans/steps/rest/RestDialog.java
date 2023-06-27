@@ -149,9 +149,10 @@ public class RestDialog extends BaseStepDialog implements StepDialogInterface {
   private Label wlProxyPort;
   private TextVar wProxyPort;
 
-  private CTabFolder wTabFolder;
+  protected CTabFolder wTabFolder;
 
-  private CTabItem wGeneralTab, wAdditionalTab, wParametersTab, wMatrixParametersTab, wAuthTab, wSSLTab;
+  private CTabItem wGeneralTab, wAdditionalTab, wParametersTab, wMatrixParametersTab, wAuthTab;
+  protected CTabItem wSSLTab;
   private FormData fdTabFolder;
 
   private Composite wGeneralComp, wAdditionalComp;
@@ -163,7 +164,7 @@ public class RestDialog extends BaseStepDialog implements StepDialogInterface {
   private Composite wAuthComp;
   private FormData fdAuthComp;
 
-  private Composite wSSLComp;
+  protected Composite wSSLComp;
   private FormData fdSSLComp;
 
   private Label wlParameters, wlMatrixParameters;
@@ -191,6 +192,9 @@ public class RestDialog extends BaseStepDialog implements StepDialogInterface {
 
   private Button wMatrixGet;
   private Listener lsMatrixGet;
+
+  protected Group gSSLTrustStore;
+
 
   public RestDialog( Shell parent, Object in, TransMeta transMeta, String sname ) {
     super( parent, (BaseStepMeta) in, transMeta, sname );
@@ -777,7 +781,7 @@ public class RestDialog extends BaseStepDialog implements StepDialogInterface {
     // ////////////////////////
     // START SSLTrustStore GROUP
 
-    Group gSSLTrustStore = new Group( wSSLComp, SWT.SHADOW_ETCHED_IN );
+    gSSLTrustStore = new Group( wSSLComp, SWT.SHADOW_ETCHED_IN );
     gSSLTrustStore.setText( BaseMessages.getString( PKG, "RestDialog.SSLTrustStoreGroup.Label" ) );
     FormLayout SSLTrustStoreLayout = new FormLayout();
     SSLTrustStoreLayout.marginWidth = 3;
@@ -844,6 +848,9 @@ public class RestDialog extends BaseStepDialog implements StepDialogInterface {
 
     // END HTTP AUTH GROUP
     // ////////////////////////
+
+    // TODO
+    additionalUIChanges();
 
     fdSSLComp = new FormData();
     fdSSLComp.left = new FormAttachment( 0, 0 );
@@ -1143,6 +1150,8 @@ public class RestDialog extends BaseStepDialog implements StepDialogInterface {
     };
     shell.addListener( SWT.Resize, lsResize );
 
+
+
     // Set the shell size, based upon previous time...
     setSize();
     wTabFolder.setSelection( 0 );
@@ -1433,7 +1442,8 @@ public class RestDialog extends BaseStepDialog implements StepDialogInterface {
     wMethodField.setEnabled( wMethodInField.getSelection() );
   }
 
-  public CTabFolder getCTabFolder() {
-    return wTabFolder;
+  protected void additionalUIChanges() {
+    // None
   }
+
 }
