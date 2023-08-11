@@ -39,6 +39,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.HashSet;
 
@@ -69,8 +70,9 @@ public class RestTest {
     transMeta.addStep( stepMeta );
     Rest rest = new Rest( stepMeta, mock( StepDataInterface.class ),
       1, transMeta, mock( Trans.class ) );
-    MultivaluedMapImpl map = rest.createMultivalueMap( "param1", "{a:{[val1]}}" );
-    String val1 = map.getFirst( "param1" );
+    //    MultivaluedMapImpl map = rest.createMultivalueMap( "param1", "{a:{[val1]}}" );
+    MultivaluedHashMap map = rest.createMultivalueMap("param1", "{a:{[val1]}}");
+    String val1 = map.getFirst( "param1" ).toString();
     assertTrue( val1.contains( "%7D" ) );
   }
 
@@ -104,15 +106,12 @@ public class RestTest {
     RowMetaInterface rmi = mock( RowMetaInterface.class );
     doReturn( 1 ).when( rmi ).size();
 
-    RestData data = mock( RestData.class );
-    DefaultApacheHttpClient4Config config = mock( DefaultApacheHttpClient4Config.class );
-    doReturn( new HashSet<>() ).when( config ).getSingletons();
+    RestData data = mock(RestData.class);
     data.method = RestMeta.HTTP_METHOD_DELETE;
     data.inputRowMeta = rmi;
     data.resultFieldName = "result";
     data.resultCodeFieldName = "status";
     data.resultHeaderFieldName = "headers";
-    data.config = config;
 
     Rest rest = mock( Rest.class );
     doCallRealMethod().when( rest ).callRest( any() );
