@@ -28,10 +28,18 @@
     <powermock.version>1.7.3</powermock.version>
     <jface.version>3.3.0-I20070606-0010</jface.version>
     <dependency.com.tinkerpop.blueprints.version>2.6.0</dependency.com.tinkerpop.blueprints.version>
+    <jersey2.version>2.38</jersey2.version>
+    <jaxrs.version>2.1.6</jaxrs.version>
 
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.glassfish.jersey.connectors</groupId>
+      <artifactId>jersey-apache-connector</artifactId>
+      <version>2.30</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>pentaho-kettle</groupId>
       <artifactId>kettle-engine</artifactId>
