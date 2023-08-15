@@ -22,12 +22,6 @@
 
 package org.pentaho.di.www;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -38,6 +32,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.vfs2.FileObject;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.pentaho.di.cluster.SlaveServer;
 import org.pentaho.di.core.KettleClientEnvironment;
 import org.pentaho.di.core.KettleEnvironment;
@@ -53,12 +49,14 @@ import org.pentaho.di.i18n.BaseMessages;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.api.json.JSONConfiguration;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Carte {
   private static Class<?> PKG = Carte.class; // for i18n purposes, needed by Translator2!!
@@ -343,25 +341,39 @@ public class Carte {
     try {
       KettleClientEnvironment.init();
 
-      ClientConfig clientConfig = new DefaultClientConfig();
-      clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-      Client client = Client.create( clientConfig );
+//      ClientConfig clientConfig = new DefaultClientConfig();
+//      clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
+//      Client client = Client.create( clientConfig );
 
-      client.addFilter( new HTTPBasicAuthFilter( username, Encr.decryptPasswordOptionallyEncrypted( password ) ) );
+//      client.addFilter( new HTTPBasicAuthFilter( username, Encr.decryptPasswordOptionallyEncrypted( password ) ) );
+      HttpAuthenticationFeature authFeature =
+        HttpAuthenticationFeature.basicBuilder()
+          .credentials(username, Encr.decryptPasswordOptionallyEncrypted(password))
+          .build();
+
+      ClientConfig clientConfig = new ClientConfig();
+      Client client = ClientBuilder.newClient(clientConfig);
+      client.register(authFeature);
 
       // check if the user can access the carte server. Don't really need this call but may want to check it's output at
       // some point
       String contextURL = "http://" + hostname + ":" + port + "/kettle";
-      WebResource resource = client.resource( contextURL + "/status/?xml=Y" );
-      String response = resource.get( String.class );
+//      WebResource resource = client.resource( contextURL + "/status/?xml=Y" );
+//      String response = resource.get( String.class );
+      WebTarget target = client.target(contextURL + "/status/?xml=Y");
+      String response = target.request().get(String.class);
+      target = client.target(contextURL + "/stopHopServer");
+      response = target.request().get(String.class);
       if ( response == null || !response.contains( "<serverstatus>" ) ) {
         throw new Carte.CarteCommandException( BaseMessages.getString( PKG, "Carte.Error.NoServerFound", hostname, ""
             + port ) );
       }
 
       // This is the call that matters
-      resource = client.resource( contextURL + "/stopCarte" );
-      response = resource.get( String.class );
+//      resource = client.resource( contextURL + "/stopCarte" );
+//      response = resource.get( String.class );
+      target = client.target(contextURL + "/stopHopServer");
+      response = target.request().get(String.class);
       if ( response == null || !response.contains( "Shutting Down" ) ) {
         throw new Carte.CarteCommandException( BaseMessages.getString( PKG, "Carte.Error.NoShutdown", hostname, ""
             + port ) );
