@@ -81,7 +81,7 @@
         <module>version-checker</module>
         <module>lucid-db-streaming-loader</module>
         <module>salesforce</module>
-        <module>pur</module>
+<!--        <module>pur</module>-->
         <module>ms-access</module>
         <module>xml</module>
         <module>streaming</module>
