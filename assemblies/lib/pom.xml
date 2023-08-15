@@ -575,17 +575,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>jsr311-api</artifactId>
-      <version>${jsr311-api.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>com.databricks</groupId>
       <artifactId>spark-avro_2.11</artifactId>
       <version>${databricks.version}</version>
