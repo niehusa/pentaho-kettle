@@ -19,9 +19,6 @@
     <platform.version>9.6.0.0-SNAPSHOT</platform.version>
     <commons-lang.version>2.6</commons-lang.version>
     <javax.ws.rs-api.version>2.0</javax.ws.rs-api.version>
-    <jersey-client.version>1.19.1</jersey-client.version>
-    <jersey-core.version>1.19.1</jersey-core.version>
-    <jersey-bundle.version>1.19.1</jersey-bundle.version>
     <json-simple.version>1.1</json-simple.version>
     <junit.version>4.12</junit.version>
     <mockito.version>1.10.19</mockito.version>
@@ -68,54 +65,6 @@
       <groupId>pentaho-kettle</groupId>
       <artifactId>kettle-ui-swt</artifactId>
       <version>${pdi.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-apache-client4</artifactId>
-      <version>${jersey-client.version}</version>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>${jersey-client.version}</version>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-bundle</artifactId>
-      <version>${jersey-bundle.version}</version>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-core</artifactId>
-      <version>${jersey-core.version}</version>
-      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
