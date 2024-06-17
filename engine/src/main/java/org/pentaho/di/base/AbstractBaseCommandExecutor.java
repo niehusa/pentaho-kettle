@@ -22,6 +22,26 @@
 
 package org.pentaho.di.base;
 
+import org.apache.commons.lang.StringUtils;
+import org.pentaho.di.core.Const;
+import org.pentaho.di.core.Result;
+import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.core.logging.LogChannelInterface;
+import org.pentaho.di.core.plugins.PluginRegistry;
+import org.pentaho.di.core.plugins.RepositoryPluginType;
+import org.pentaho.di.core.service.PluginServiceLoader;
+import org.pentaho.di.core.util.Utils;
+import org.pentaho.di.i18n.BaseMessages;
+import org.pentaho.di.metastore.MetaStoreConst;
+import org.pentaho.di.pan.CommandLineOptionProvider;
+import org.pentaho.di.repository.RepositoriesMeta;
+import org.pentaho.di.repository.Repository;
+import org.pentaho.di.repository.RepositoryDirectoryInterface;
+import org.pentaho.di.repository.RepositoryMeta;
+import org.pentaho.di.repository.RepositoryOperation;
+import org.pentaho.di.version.BuildVersion;
+import org.pentaho.metastore.api.IMetaStore;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,25 +52,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-import org.pentaho.di.core.Const;
-import org.pentaho.di.core.Result;
-import org.pentaho.di.core.logging.LogChannelInterface;
-import org.pentaho.di.core.exception.KettleException;
-import org.pentaho.di.core.plugins.PluginRegistry;
-import org.pentaho.di.core.plugins.RepositoryPluginType;
-import org.pentaho.di.core.util.Utils;
-import org.pentaho.di.i18n.BaseMessages;
-import org.pentaho.di.metastore.MetaStoreConst;
-import org.pentaho.di.repository.RepositoriesMeta;
-import org.pentaho.di.repository.Repository;
-import org.pentaho.di.repository.RepositoryDirectoryInterface;
-import org.pentaho.di.repository.RepositoryMeta;
-import org.pentaho.di.repository.RepositoryOperation;
-import org.pentaho.metastore.api.exceptions.MetaStoreException;
-import org.pentaho.di.version.BuildVersion;
-import org.pentaho.metastore.api.IMetaStore;
 
 public abstract class AbstractBaseCommandExecutor {
 
@@ -81,8 +82,10 @@ public abstract class AbstractBaseCommandExecutor {
     }
   }
 
-  protected int calculateAndPrintElapsedTime( Date start, Date stop, String startStopMsgTkn, String processingEndAfterMsgTkn,
-                                              String processingEndAfterLongMsgTkn, String processingEndAfterLongerMsgTkn,
+  protected int calculateAndPrintElapsedTime( Date start, Date stop, String startStopMsgTkn,
+                                              String processingEndAfterMsgTkn,
+                                              String processingEndAfterLongMsgTkn,
+                                              String processingEndAfterLongerMsgTkn,
                                               String processingEndAfterLongestMsgTkn ) {
 
     String begin = getDateFormat().format( start );
@@ -93,20 +96,22 @@ public abstract class AbstractBaseCommandExecutor {
     long millis = stop.getTime() - start.getTime();
     int seconds = (int) ( millis / 1000 );
     if ( seconds <= 60 ) {
-      getLog().logMinimal( BaseMessages.getString( getPkgClazz(), processingEndAfterMsgTkn, String.valueOf( seconds ) ) );
+      getLog().logMinimal(
+        BaseMessages.getString( getPkgClazz(), processingEndAfterMsgTkn, String.valueOf( seconds ) ) );
     } else if ( seconds <= 60 * 60 ) {
       int min = ( seconds / 60 );
       int rem = ( seconds % 60 );
       getLog().logMinimal( BaseMessages.getString( getPkgClazz(), processingEndAfterLongMsgTkn, String.valueOf( min ),
-                    String.valueOf( rem ), String.valueOf( seconds ) ) );
+        String.valueOf( rem ), String.valueOf( seconds ) ) );
     } else if ( seconds <= 60 * 60 * 24 ) {
       int rem;
       int hour = ( seconds / ( 60 * 60 ) );
       rem = ( seconds % ( 60 * 60 ) );
       int min = rem / 60;
       rem = rem % 60;
-      getLog().logMinimal( BaseMessages.getString(  getPkgClazz(), processingEndAfterLongerMsgTkn, String.valueOf( hour ),
-                    String.valueOf( min ), String.valueOf( rem ), String.valueOf( seconds ) ) );
+      getLog().logMinimal(
+        BaseMessages.getString( getPkgClazz(), processingEndAfterLongerMsgTkn, String.valueOf( hour ),
+          String.valueOf( min ), String.valueOf( rem ), String.valueOf( seconds ) ) );
     } else {
       int rem;
       int days = ( seconds / ( 60 * 60 * 24 ) );
@@ -115,8 +120,9 @@ public abstract class AbstractBaseCommandExecutor {
       rem = rem % ( 60 * 60 );
       int min = rem / 60;
       rem = rem % 60;
-      getLog().logMinimal( BaseMessages.getString( getPkgClazz(), processingEndAfterLongestMsgTkn, String.valueOf( days ),
-                    String.valueOf( hour ), String.valueOf( min ), String.valueOf( rem ), String.valueOf( seconds ) ) );
+      getLog().logMinimal(
+        BaseMessages.getString( getPkgClazz(), processingEndAfterLongestMsgTkn, String.valueOf( days ),
+          String.valueOf( hour ), String.valueOf( min ), String.valueOf( rem ), String.valueOf( seconds ) ) );
     }
 
     return seconds;
@@ -125,15 +131,17 @@ public abstract class AbstractBaseCommandExecutor {
   protected void printVersion( String kettleVersionMsgTkn ) {
     BuildVersion buildVersion = BuildVersion.getInstance();
     getLog().logBasic( BaseMessages.getString( getPkgClazz(), kettleVersionMsgTkn, buildVersion.getVersion(),
-            buildVersion.getRevision(), buildVersion.getBuildDate() ) );
+      buildVersion.getRevision(), buildVersion.getBuildDate() ) );
   }
 
   public RepositoryMeta loadRepositoryConnection( final String repoName, String loadingAvailableRepMsgTkn,
-                                                     String noRepsDefinedMsgTkn, String findingRepMsgTkn ) throws KettleException {
+                                                  String noRepsDefinedMsgTkn, String findingRepMsgTkn )
+    throws KettleException {
 
     RepositoriesMeta repsinfo;
 
-    if ( Utils.isEmpty( repoName ) || ( repsinfo = loadRepositoryInfo( loadingAvailableRepMsgTkn, noRepsDefinedMsgTkn ) ) == null ) {
+    if ( Utils.isEmpty( repoName )
+      || ( repsinfo = loadRepositoryInfo( loadingAvailableRepMsgTkn, noRepsDefinedMsgTkn ) ) == null ) {
       return null;
     }
 
@@ -141,7 +149,8 @@ public abstract class AbstractBaseCommandExecutor {
     return repsinfo.findRepository( repoName );
   }
 
-  public RepositoriesMeta loadRepositoryInfo( String loadingAvailableRepMsgTkn, String noRepsDefinedMsgTkn ) throws KettleException {
+  public RepositoriesMeta loadRepositoryInfo( String loadingAvailableRepMsgTkn, String noRepsDefinedMsgTkn )
+    throws KettleException {
 
     RepositoriesMeta repsinfo = new RepositoriesMeta();
     repsinfo.getLog().setLogLevel( getLog().getLogLevel() );
@@ -157,8 +166,10 @@ public abstract class AbstractBaseCommandExecutor {
     return repsinfo;
   }
 
-  public RepositoryDirectoryInterface loadRepositoryDirectory( Repository repository, String dirName, String noRepoProvidedMsgTkn,
-                                                                  String allocateAndConnectRepoMsgTkn, String cannotFindDirMsgTkn ) throws KettleException {
+  public RepositoryDirectoryInterface loadRepositoryDirectory( Repository repository, String dirName,
+                                                               String noRepoProvidedMsgTkn,
+                                                               String allocateAndConnectRepoMsgTkn,
+                                                               String cannotFindDirMsgTkn ) throws KettleException {
 
     if ( repository == null ) {
       System.out.println( BaseMessages.getString( getPkgClazz(), noRepoProvidedMsgTkn ) );
@@ -182,10 +193,12 @@ public abstract class AbstractBaseCommandExecutor {
     return directory;
   }
 
-  public Repository establishRepositoryConnection( RepositoryMeta repositoryMeta, final String username, final String password,
-                                                     final RepositoryOperation... operations ) throws KettleException {
+  public Repository establishRepositoryConnection( RepositoryMeta repositoryMeta, final String username,
+                                                   final String password,
+                                                   final RepositoryOperation... operations ) throws KettleException {
 
-    Repository rep = PluginRegistry.getInstance().loadClass( RepositoryPluginType.class, repositoryMeta, Repository.class );
+    Repository rep =
+      PluginRegistry.getInstance().loadClass( RepositoryPluginType.class, repositoryMeta, Repository.class );
     rep.init( repositoryMeta );
     rep.getLog().setLogLevel( getLog().getLogLevel() );
     rep.connect( username != null ? username : null, password != null ? password : null );
@@ -198,12 +211,13 @@ public abstract class AbstractBaseCommandExecutor {
     return rep;
   }
 
-  public void printRepositoryDirectories( Repository repository, RepositoryDirectoryInterface directory ) throws KettleException {
+  public void printRepositoryDirectories( Repository repository, RepositoryDirectoryInterface directory )
+    throws KettleException {
 
     String[] directories = repository.getDirectoryNames( directory.getObjectId() );
 
     if ( directories != null ) {
-      for ( String dir :  directories ) {
+      for ( String dir : directories ) {
         System.out.println( dir );
       }
     }
@@ -213,7 +227,9 @@ public abstract class AbstractBaseCommandExecutor {
     if ( Utils.isEmpty( defaultValue ) ) {
       System.out.println( "Parameter: " + name + "=" + Const.NVL( value, "" ) + " : " + Const.NVL( description, "" ) );
     } else {
-      System.out.println( "Parameter: " + name + "=" + Const.NVL( value, "" ) + ", default=" + defaultValue + " : " + Const.NVL( description, "" ) );
+      System.out.println(
+        "Parameter: " + name + "=" + Const.NVL( value, "" ) + ", default=" + defaultValue + " : " + Const.NVL(
+          description, "" ) );
     }
   }
 
@@ -229,14 +245,16 @@ public abstract class AbstractBaseCommandExecutor {
   }
 
   public boolean isEnabled( final String value ) {
-    return YES.equalsIgnoreCase( value ) || Boolean.parseBoolean( value ); // both are NPE safe, both are case-insensitive
+    return YES.equalsIgnoreCase( value ) || Boolean.parseBoolean(
+      value ); // both are NPE safe, both are case-insensitive
   }
 
   /**
    * Decodes the provided base64String into a default path. Resulting zip file is UUID-named for concurrency sake.
    *
-   * @param base64Zip BASE64 representation of a file
-   * @param deleteOnJvmExit true if we want this newly generated file to be marked for deletion on JVM termination, false otherwise
+   * @param base64Zip       BASE64 representation of a file
+   * @param deleteOnJvmExit true if we want this newly generated file to be marked for deletion on JVM termination,
+   *                        false otherwise
    * @return File the newly created File
    */
   public File decodeBase64ToZipFile( Serializable base64Zip, boolean deleteOnJvmExit ) throws IOException {
@@ -256,7 +274,7 @@ public abstract class AbstractBaseCommandExecutor {
    * Decodes the provided base64String into the specified filePath. Parent directories must already exist.
    *
    * @param base64Zip BASE64 representation of a file
-   * @param filePath String The path to which the base64String is to be decoded
+   * @param filePath  String The path to which the base64String is to be decoded
    * @return File the newly created File
    */
   public File decodeBase64ToZipFile( Serializable base64Zip, String filePath ) throws IOException {
@@ -317,5 +335,18 @@ public abstract class AbstractBaseCommandExecutor {
 
   public void setResult( Result result ) {
     this.result = result;
+  }
+
+  public int validateBowlPath( String path ) throws KettleException {
+    try {
+      for ( CommandLineOptionProvider provider : PluginServiceLoader.loadServices(
+        CommandLineOptionProvider.class ) ) {
+        provider.validateExecute( log, path );
+      }
+    } catch ( KettleException ke ) {
+      return CommandExecutorCodes.Kitchen.ERRORS_INVALID_PROJECT.getCode();
+    }
+    return 0;
+    //    return result code, 0 means success;
   }
 }

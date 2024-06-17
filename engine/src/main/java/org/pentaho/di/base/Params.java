@@ -26,9 +26,9 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.pentaho.di.core.parameters.NamedParams;
 import org.pentaho.di.core.parameters.UnknownParamException;
 
-import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Params implements IParams {
 
@@ -61,6 +61,16 @@ public class Params implements IParams {
   private String base64Zip;
   private NamedParams namedParams;
   private NamedParams customNamedParams;
+
+  public String getBowlPath() {
+    return bowlPath;
+  }
+
+  public void setBowlPath( String bowlPath ) {
+    this.bowlPath = bowlPath;
+  }
+
+  private String bowlPath;
 
   private Params() {
 
@@ -96,12 +106,18 @@ public class Params implements IParams {
     private String base64Zip;
     private NamedParams namedParams;
     private NamedParams customNamedParams;
+    private String bowlPath;
+
+    public Builder bowlPath( String bowlPath ) {
+      this.bowlPath = bowlPath;
+      return this;
+    }
 
     public Builder() {
       this( java.util.UUID.randomUUID().toString() );
     }
 
-    public Builder( String  uuid ) {
+    public Builder( String uuid ) {
       this.uuid = uuid;
     }
 
@@ -272,10 +288,12 @@ public class Params implements IParams {
       params.oldLogFile = oldLogFile;
       params.version = version;
       params.resultSetStepName = resultSetStepName;
-      params.resultSetCopyNumber = NumberUtils.isNumber( resultSetCopyNumber ) ? resultSetCopyNumber : "0" /* default */;
+      params.resultSetCopyNumber =
+        NumberUtils.isNumber( resultSetCopyNumber ) ? resultSetCopyNumber : "0" /* default */;
       params.base64Zip = base64Zip;
       params.namedParams = namedParams;
       params.customNamedParams = customNamedParams;
+      params.bowlPath = bowlPath;
 
       return params;
     }
