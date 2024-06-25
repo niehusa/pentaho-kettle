@@ -93,12 +93,6 @@ public class PanCommandExecutor extends AbstractBaseCommandExecutor {
     Repository repository = null;
 
     try {
-      // Need to call ProjectCommandLineOptionProvider.validateExecute(),
-      ///////////////////////////////////////////////
-      int returncode = validateBowlPath( params.getBowlPath() );
-      if ( returncode != 0 ) {
-        return exitWithStatus( returncode );
-      }
 
       if ( getMetaStore() == null ) {
         setMetaStore( MetaStoreConst.getDefaultMetastore() );

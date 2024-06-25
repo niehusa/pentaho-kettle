@@ -45,11 +45,13 @@ import org.pentaho.di.core.util.ExecutorUtil;
 import org.pentaho.di.core.util.Utils;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.i18n.LanguageChoice;
+import org.pentaho.di.pan.CommandExecutorResult;
 import org.pentaho.di.pan.CommandLineOption;
 import org.pentaho.di.pan.CommandLineOptionProvider;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -116,7 +118,7 @@ public class Kitchen {
     StringBuilder optionFilename, optionLoglevel, optionLogfile, optionLogfileOld, optionListdir;
     StringBuilder optionListjobs, optionListrep, optionNorep, optionVersion, optionListParam, optionExport,
       optionBase64Zip, optionUuid;
-    StringBuilder optionBowlPath = new StringBuilder();
+    StringBuilder pluginParam = new StringBuilder();
     NamedParams optionParams = new NamedParamsDefault();
     NamedParams customOptions = new NamedParamsDefault();
 
@@ -218,8 +220,8 @@ public class Kitchen {
       throw repositoryRegisterException;
     }
     Future<KettleException> kettleInitFuture = repositoryRegisterResults.getValue();
-    //    updatedOptionList = getAdditionalCommandlineOption( options, optionBowlPath );
-    List<CommandLineOption> updatedOptionList = getAdditionalCommandlineOption( options, optionBowlPath );
+    //    updatedOptionList = getAdditionalCommandlineOption( options, pluginParam );
+    List<CommandLineOption> updatedOptionList = getAdditionalCommandlineOption( options, pluginParam );
     options = updatedOptionList.toArray( new CommandLineOption[ 0 ] );
     LogChannelInterface log = new LogChannel( STRING_KITCHEN );
 
@@ -231,7 +233,7 @@ public class Kitchen {
 
     CommandLineOption.parseArguments( args, options, log );
 
-    if( !optionRepname.toString().isEmpty() && !optionBowlPath.toString().isEmpty()) {
+    if ( !optionRepname.toString().isEmpty() && !pluginParam.toString().isEmpty() ) {
       log.logError( BaseMessages.getString( PKG, "Kitchen.Error.ComdLine.RepAndProject" ) );
       blockAndThrow( kettleInitFuture );
       exitJVM( 9 );
@@ -266,6 +268,16 @@ public class Kitchen {
         }
       }
 
+      //      int returncode = validateAndSetPluginParam( log, pluginParam.toString() );
+      if ( !Utils.isEmpty( pluginParam.toString() ) ) {
+        CommandExecutorResult rslt = validateAndSetPluginParam( log, pluginParam.toString() );
+        if ( rslt.getResult().getCode() != 0 ) {
+          blockAndThrow( kettleInitFuture );
+          exitJVM( rslt.getResult().getCode() );
+          //        return exitWithStatus( returncode );
+        }
+      }
+
       Params.Builder builder =
         optionUuid.length() > 0 ? new Params.Builder( optionUuid.toString() ) : new Params.Builder();
       Params jobParams = ( builder )
@@ -295,7 +307,7 @@ public class Kitchen {
         .base64Zip( optionBase64Zip.toString() )
         .namedParams( optionParams )
         .customNamedParams( customOptions )
-        .bowlPath( optionBowlPath.toString() )
+        .bowlPath( pluginParam.toString() )
         .build();
 
       result = getCommandExecutor().execute( jobParams, args.toArray( new String[ args.size() ] ) );
@@ -398,5 +410,39 @@ public class Kitchen {
 
   public static void setCommandExecutor( KitchenCommandExecutor commandExecutor ) {
     Kitchen.commandExecutor = commandExecutor;
+  }
+
+  private static CommandExecutorResult validateAndSetPluginParam( LogChannelInterface log, String path )
+    throws KettleException {
+    //    String returnMsg = "";
+
+    CommandExecutorResult result = null;
+    try {
+      Collection<CommandLineOptionProvider> commandlineProviders = PluginServiceLoader.loadServices( CommandLineOptionProvider.class );
+      CommandLineOptionProvider provider = commandlineProviders.stream().findFirst().orElse( null );
+      result = provider.handleParameter( log, path );
+      //        for ( CommandLineOptionProvider provider : PluginServiceLoader.loadServices(
+      //        CommandLineOptionProvider.class ) ) {
+      //          return provider.handleParameter( log, path );
+      //        }
+    } catch ( KettlePluginException ke ) {
+      //        return CommandExecutorCodes.Pan.UNEXPECTED_ERROR.getDescription();
+    } catch ( KettleException e ) {
+      throw new RuntimeException( e );
+    }
+    return result;
+    //    return CommandExecutorResult.Result.SUCCESS;
+    //    return returnMsg;
+
+    //    try {
+    //      for ( CommandLineOptionProvider provider : PluginServiceLoader.loadServices(
+    //        CommandLineOptionProvider.class ) ) {
+    //        provider.handleParameter( log, path );
+    //      }
+    //    } catch ( KettleException ke ) {
+    //      return CommandExecutorCodes.Kitchen.ERRORS_INVALID_PROJECT.getCode();
+    //    }
+    //    return 0;
+    //    return result code, 0 means success;
   }
 }

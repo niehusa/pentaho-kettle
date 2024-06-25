@@ -28,6 +28,7 @@ import org.pentaho.di.core.Const;
 import org.pentaho.di.core.KettleClientEnvironment;
 import org.pentaho.di.core.KettleEnvironment;
 import org.pentaho.di.core.Result;
+import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettlePluginException;
 import org.pentaho.di.core.logging.FileLoggingEventListener;
 import org.pentaho.di.core.logging.KettleLogStore;
@@ -46,6 +47,7 @@ import org.pentaho.di.trans.Trans;
 import org.pentaho.di.trans.TransMeta;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -80,7 +82,7 @@ public class Pan {
       StringBuilder optionVersion, optionJarFilename, optionListParam, optionMetrics, initialDir;
       StringBuilder optionResultSetStepName, optionResultSetCopyNumber;
       StringBuilder optionBase64Zip, optionUuid;
-      StringBuilder optionBowlPath = new StringBuilder();
+      StringBuilder pluginParam = new StringBuilder();
 
       NamedParams optionParams = new NamedParamsDefault();
 
@@ -168,7 +170,7 @@ public class Pan {
             "metrics", BaseMessages.getString( PKG, "Pan.ComdLine.Metrics" ), optionMetrics =
             new StringBuilder(), true, false ), maxLogLinesOption, maxLogTimeoutOption };
 
-      List<CommandLineOption> updatedOptionList = getAdditionalCommandlineOption( options, optionBowlPath );
+      List<CommandLineOption> updatedOptionList = getAdditionalCommandlineOption( options, pluginParam );
       if ( args.size() == 2 ) { // 2 internal hidden argument (flag and value)
         CommandLineOption.printUsage( updatedOptionList.toArray( new CommandLineOption[ 0 ] ) );
         exitJVM( CommandExecutorCodes.Pan.CMD_LINE_PRINT.getCode() );
@@ -217,7 +219,7 @@ public class Pan {
         log.logMinimal( BaseMessages.getString( PKG, "Pan.Log.Loglevel", log.getLogLevel().getDescription() ) );
       }
 
-      if( !optionRepname.toString().isEmpty() && !optionBowlPath.toString().isEmpty() ) {
+      if( !optionRepname.toString().isEmpty() && !pluginParam.toString().isEmpty() ) {
         log.logError( BaseMessages.getString( PKG, "Pan.Error.ComdLine.RepAndProject" ) );
         exitJVM( 9 );
       }
@@ -244,6 +246,16 @@ public class Pan {
 
         if ( a.length == 1 ) {
           exitJVM( CommandExecutorCodes.Pan.KETTLE_VERSION_PRINT.getCode() );
+        }
+      }
+      // Need to call ProjectCommandLineOptionProvider.validateExecute(),
+      ///////////////////////////////////////////////
+//      String rtnMsg = validateAndSetPluginParam( log, pluginParam.toString() );
+      if ( !Utils.isEmpty( pluginParam.toString() ) ) {
+        CommandExecutorResult result = validateAndSetPluginParam( log, pluginParam.toString() );
+        if ( result.getResult().getCode() != 0 ) {
+          exitJVM( result.getResult().getCode() );
+          //        return exitWithStatus( returncode );
         }
       }
 
@@ -277,17 +289,37 @@ public class Pan {
         .resultSetCopyNumber( optionResultSetCopyNumber.toString() )
         .base64Zip( optionBase64Zip.toString() )
         .namedParams( optionParams )
-        .bowlPath( optionBowlPath.toString() )
+//        .bowlPath( pluginParam.toString() )
         .build();
 
-      Result result = getCommandExecutor().execute( transParams, args.toArray( new String[ args.size() ] ) );
+      Result rslt = getCommandExecutor().execute( transParams, args.toArray( new String[ args.size() ] ) );
 
-      exitJVM( result.getExitStatus() );
+      exitJVM( rslt.getExitStatus() );
 
     } catch ( Throwable t ) {
       t.printStackTrace();
       exitJVM( CommandExecutorCodes.Pan.UNEXPECTED_ERROR.getCode() );
     }
+  }
+
+  private static CommandExecutorResult validateAndSetPluginParam( LogChannelInterface log, String path ) {
+//    String returnMsg = "";
+    CommandExecutorResult result = null;
+      try {
+        Collection<CommandLineOptionProvider> commandlineProviders = PluginServiceLoader.loadServices( CommandLineOptionProvider.class );
+        CommandLineOptionProvider provider = commandlineProviders.stream().findFirst().orElse( null );
+        result = provider.handleParameter( log, path );
+
+        //        for ( CommandLineOptionProvider provider : PluginServiceLoader.loadServices( CommandLineOptionProvider.class ) ) {
+//          return provider.handleParameter( log, path );
+//        }
+      } catch ( KettlePluginException ke ) {
+//        return CommandExecutorCodes.Pan.UNEXPECTED_ERROR.getDescription();
+      } catch ( KettleException e ) {
+        throw new RuntimeException( e );
+      }
+      return result;
+//    return returnMsg;
   }
 
   private static List<CommandLineOption> getAdditionalCommandlineOption( CommandLineOption[] options,

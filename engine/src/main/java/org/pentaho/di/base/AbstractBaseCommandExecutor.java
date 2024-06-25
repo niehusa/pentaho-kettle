@@ -337,16 +337,4 @@ public abstract class AbstractBaseCommandExecutor {
     this.result = result;
   }
 
-  public int validateBowlPath( String path ) throws KettleException {
-    try {
-      for ( CommandLineOptionProvider provider : PluginServiceLoader.loadServices(
-        CommandLineOptionProvider.class ) ) {
-        provider.validateExecute( log, path );
-      }
-    } catch ( KettleException ke ) {
-      return CommandExecutorCodes.Kitchen.ERRORS_INVALID_PROJECT.getCode();
-    }
-    return 0;
-    //    return result code, 0 means success;
-  }
 }

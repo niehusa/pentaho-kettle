@@ -91,10 +91,10 @@ public class KitchenCommandExecutor extends AbstractBaseCommandExecutor {
     Repository repository = null;
 
     try {
-      int returncode = validateBowlPath( params.getBowlPath() );
-      if ( returncode != 0 ) {
-        return exitWithStatus( returncode );
-      }
+//      int returncode = validateBowlPath( params.getBowlPath() );
+//      if ( returncode != 0 ) {
+//        return exitWithStatus( returncode );
+//      }
 
       if ( getMetaStore() == null ) {
         setMetaStore( MetaStoreConst.getDefaultMetastore() );
@@ -202,10 +202,10 @@ public class KitchenCommandExecutor extends AbstractBaseCommandExecutor {
     Date start = Calendar.getInstance().getTime();
 
     try {
-      int returncode = validateBowlPath( params.getBowlPath() );
-      if ( returncode != 0 ) {
-        exitWithStatus( returncode );
-      }
+//      int returncode = validateBowlPath( params.getBowlPath() );
+//      if ( returncode != 0 ) {
+//        exitWithStatus( returncode );
+//      }
 
       // Set the command line arguments on the job ...
       job.setArguments( arguments );
